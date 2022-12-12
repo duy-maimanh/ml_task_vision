@@ -3,6 +3,7 @@ package com.mmd.ml_task_vision.core;
 import androidx.annotation.FloatRange;
 import androidx.annotation.IntRange;
 
+@Deprecated
 public abstract class OutputImageOptions {
     public OutputImageOptions() {
     }

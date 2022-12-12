@@ -50,12 +50,14 @@ public final class ImageUtils {
         }
     }
 
+    @Deprecated
     public static Bitmap scaleImage(Bitmap bitmap,
                                     int targetWidth,
                                     int targetHeight) {
         return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight,true);
     }
 
+    @Deprecated
     public static Bitmap rotateBitmap(Bitmap bitmap,
                                       int rotationDegree) {
         Matrix matrix = new Matrix();
@@ -64,6 +66,7 @@ public final class ImageUtils {
                 bitmap.getHeight(), matrix, true);
     }
 
+    @Deprecated
     public static Bitmap processOutput(Bitmap bitmap,
                                        OutputImageOptions options) {
         int rotationDegree = options.rotationDegrees();

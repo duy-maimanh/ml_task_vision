@@ -78,6 +78,7 @@ public final class NsfwProcess {
             public Builder() {
             }
 
+            @Deprecated
             public abstract NsfwProcessOptions.Builder setOutputImageOptions(OutputImageOptions options);
 
             public abstract NsfwProcessOptions.Builder setFilterMode(FilterMode mode, @FloatRange(from = 0, to = 1) double filterNumber);
