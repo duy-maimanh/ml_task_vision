@@ -8,21 +8,35 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 
-import com.mmd.ml_task_vision.core.OutputImageOptions;
+import com.mmd.ml_task_vision.core.BaseOptions;
 
 public final class ImageUtils {
 
+    /**
+     * Because ScriptIntrinsicBlur is max 25. So we scale down this image and
+     * scale up it after blur to keep bitmap size.
+     *
+     * @param context
+     * @param input        is input bitmap
+     * @param filterNumber is determine how much blur.
+     * @return a bitmap after blur.
+     */
     public static Bitmap blurImage(Context context, Bitmap input, double filterNumber) {
         try {
             boolean isResize = false;
             Bitmap processImageInput = input;
-            if (filterNumber < 1) {
+            if (filterNumber > 0) {
                 isResize = true;
-                processImageInput = Bitmap.createScaledBitmap(input,
-                        (int) (input.getWidth() * filterNumber),
-                        (int) (input.getHeight() * filterNumber),
-                        false
-                );
+                int targetWidth = (int) (input.getWidth() * (1 - filterNumber));
+                int targetHeight = (int) (input.getHeight() * (1 - filterNumber));
+                // at least ten pixel
+                if (targetWidth < 10) {
+                    targetWidth = 10;
+                }
+                if (targetHeight < 10) {
+                    targetHeight = 10;
+                }
+                processImageInput = Bitmap.createScaledBitmap(input, targetWidth, targetHeight, false);
             }
             RenderScript rsScript = RenderScript.create(context);
             Allocation alloc = Allocation.createFromBitmap(rsScript, processImageInput);
@@ -39,56 +53,11 @@ public final class ImageUtils {
 
             rsScript.destroy();
             if (isResize) {
-                result = Bitmap.createScaledBitmap(result,
-                        input.getWidth(),
-                        input.getHeight(),
-                        true);
+                result = Bitmap.createScaledBitmap(result, input.getWidth(), input.getHeight(), true);
             }
             return result;
         } catch (Exception e) {
             return input;
         }
-    }
-
-    @Deprecated
-    public static Bitmap scaleImage(Bitmap bitmap,
-                                    int targetWidth,
-                                    int targetHeight) {
-        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight,true);
-    }
-
-    @Deprecated
-    public static Bitmap rotateBitmap(Bitmap bitmap,
-                                      int rotationDegree) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(rotationDegree);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
-                bitmap.getHeight(), matrix, true);
-    }
-
-    @Deprecated
-    public static Bitmap processOutput(Bitmap bitmap,
-                                       OutputImageOptions options) {
-        int rotationDegree = options.rotationDegrees();
-        int targetWidth = options.targetWidth();
-        int targetHeight = options.targetHeight();
-        if (rotationDegree == 0 && (targetHeight == 0 || targetWidth == 0) && options.scaleRatio() == 1) {
-            return bitmap;
-        }
-        Bitmap processOutput = bitmap;
-
-        if (rotationDegree != 0) {
-            processOutput = rotateBitmap(processOutput, rotationDegree);
-        }
-
-        // Scale block
-        if (targetHeight > 0 && targetWidth > 0) {
-            processOutput = scaleImage(processOutput, targetWidth, targetHeight);
-        } else if (options.scaleRatio() < 1) {
-            targetWidth = (int) (bitmap.getWidth() * options.scaleRatio());
-            targetHeight = (int) (bitmap.getHeight() * options.scaleRatio());
-            processOutput = scaleImage(processOutput, targetWidth, targetHeight);
-        }
-        return processOutput;
     }
 }

@@ -4,13 +4,16 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.mmd.ml_task_vision.core.FilterMode
-import com.mmd.ml_task_vision.core.OutputImageOptions
+import com.mmd.ml_task_vision.core.BaseOptions
 import com.mmd.ml_task_vision.nsfw_classification.NsfwProcess
 import com.mmd.ml_task_vision.nsfw_classification.NsfwProcess.NsfwProcessOptions
 import java.io.IOException
@@ -18,27 +21,32 @@ import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var nsfwProcess: NsfwProcess
+    private val getContent =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            // Handle the returned Uri
+            benchmark {
+                val result = nsfwProcess.detect(uri)
+                Log.d("Result: ", result.highestResult.key)
+                findViewById<ImageView>(R.id.imgShow).setImageBitmap(result.filteredImage)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val bitmap = getBitmapFromAsset(this, "girl.jpg")
-        val options = OutputImageOptions.builder()
-            .setTargetSize(100, 100)
-            .setScaleRatio(0.1)
-            .setRotationDegrees(90)
+        val options = BaseOptions.builder()
+            .isUseGPU(true)
             .build()
 
         val nsfwProcessOptions = NsfwProcessOptions.builder()
-            .setOutputImageOptions(options)
+            .setBaseOptions(options)
             .setFilterMode(FilterMode.BLUR, 0.0)
             .build()
 
-        val nsfwProcess = NsfwProcess.create(this, nsfwProcessOptions)
-        findViewById<Button>(R.id.btnReRun).setOnClickListener {
-            benchmark {
-                val result = nsfwProcess.process(bitmap)
-                Log.d("NSFW detection:", result.highestResult.key)
-            }
+        nsfwProcess = NsfwProcess.create(this, nsfwProcessOptions)
+        findViewById<Button>(R.id.btnSelectImage).setOnClickListener {
+            getContent.launch("image/*")
         }
     }
 
@@ -63,5 +71,10 @@ class MainActivity : AppCompatActivity() {
         block()
         timeRun = SystemClock.uptimeMillis() - timeRun
         Log.d("Speed:", "$timeRun millis")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        nsfwProcess.close()
     }
 }

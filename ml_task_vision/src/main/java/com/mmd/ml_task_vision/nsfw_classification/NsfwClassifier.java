@@ -5,8 +5,13 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 
+import com.mmd.ml_task_vision.core.BaseOptions;
+
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.InterpreterApi;
+import org.tensorflow.lite.gpu.CompatibilityList;
+import org.tensorflow.lite.gpu.GpuDelegate;
+import org.tensorflow.lite.gpu.GpuDelegateFactory;
 import org.tensorflow.lite.support.common.FileUtil;
 import org.tensorflow.lite.support.common.TensorProcessor;
 import org.tensorflow.lite.support.image.ImageProcessor;
@@ -23,22 +28,34 @@ import java.util.Map;
 class NsfwClassifier {
     private static final String NSFW_MODEL_NAME = "nsfw_classifier.tflite";
     private static final String NSFW_LABELS = "nsfw_labels.txt";
-    private static final int NUM_THREAD = 4;
     private final Context context;
+    private final BaseOptions baseOptions;
     private final TensorBuffer probabilityBuffer =
-            TensorBuffer.createFixedSize(new int[]{1, 5}, DataType.FLOAT32);
+            TensorBuffer.createFixedSize(new int[]{1, 2}, DataType.FLOAT32);
     private InterpreterApi interpreterApi;
     private List<String> associatedAxisLabels;
 
-    NsfwClassifier(Context context) {
+    NsfwClassifier(Context context, BaseOptions baseOptions) {
         this.context = context;
+        this.baseOptions = baseOptions;
         create();
     }
 
     private void create() {
         MappedByteBuffer mappedByteBuffer;
-        InterpreterApi.Options options =
-                new InterpreterApi.Options().setNumThreads(NUM_THREAD);
+        InterpreterApi.Options options = new InterpreterApi.Options();
+        CompatibilityList compatList = new CompatibilityList();
+        if (baseOptions.isUseGPU()) {
+            if (compatList.isDelegateSupportedOnThisDevice()) {
+                GpuDelegateFactory.Options delegateOptions = compatList.getBestOptionsForThisDevice();
+                GpuDelegate gpuDelegate = new GpuDelegate(delegateOptions);
+                options.addDelegate(gpuDelegate);
+            } else {
+                options.setNumThreads(baseOptions.numberThreads());
+            }
+        } else {
+            options.setNumThreads(baseOptions.numberThreads());
+        }
         try {
             mappedByteBuffer = FileUtil.loadMappedFile(context, NSFW_MODEL_NAME);
             interpreterApi = InterpreterApi.create(mappedByteBuffer, options);
@@ -49,11 +66,7 @@ class NsfwClassifier {
     }
 
     private TensorImage prepareTensorInput(Bitmap bitmap) {
-        ImageProcessor imageProcessor =
-                new ImageProcessor.Builder()
-                        .add(new ResizeOp(256, 256,
-                                ResizeOp.ResizeMethod.BILINEAR))
-                        .build();
+        ImageProcessor imageProcessor = new ImageProcessor.Builder().add(new ResizeOp(256, 256, ResizeOp.ResizeMethod.BILINEAR)).build();
         TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
 
         // Preprocess the image
@@ -62,25 +75,11 @@ class NsfwClassifier {
         return tensorImage;
     }
 
-    Map<String, Float> process(Bitmap bitmap) {
+    Map<String, Float> detect(Bitmap bitmap) {
 
         TensorImage tensorImage = prepareTensorInput(bitmap);
 
         return inference(tensorImage);
-    }
-
-    Map<String, Float> process(Uri uri) {
-        try {
-            Bitmap bitmap =
-                    MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
-
-            TensorImage tensorImage = prepareTensorInput(bitmap);
-
-            return inference(tensorImage);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private Map<String, Float> inference(TensorImage tensorImage) {
@@ -88,13 +87,11 @@ class NsfwClassifier {
             interpreterApi.run(tensorImage.getBuffer(), probabilityBuffer.getBuffer());
         }
 
-        TensorProcessor probabilityProcessor =
-                new TensorProcessor.Builder().build();
+        TensorProcessor probabilityProcessor = new TensorProcessor.Builder().build();
         Map<String, Float> floatMap = null;
         if (null != associatedAxisLabels) {
             // Map of labels and their corresponding probability
-            TensorLabel labels = new TensorLabel(associatedAxisLabels,
-                    probabilityProcessor.process(probabilityBuffer));
+            TensorLabel labels = new TensorLabel(associatedAxisLabels, probabilityProcessor.process(probabilityBuffer));
 
             // Create a map to access the result based on label
             floatMap = labels.getMapWithFloatValue();

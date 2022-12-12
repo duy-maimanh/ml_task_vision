@@ -1,22 +1,22 @@
 package com.mmd.ml_task_vision.nsfw_classification;
 
 import com.mmd.ml_task_vision.core.FilterMode;
-import com.mmd.ml_task_vision.core.OutputImageOptions;
+import com.mmd.ml_task_vision.core.BaseOptions;
 
 final class AutoValueNsfwProcessOptions extends NsfwProcess.NsfwProcessOptions {
-    private final OutputImageOptions outputImageOptions;
+    private final BaseOptions baseOptions;
     private final FilterMode filterMode;
     private final double filterNumber;
 
-    public AutoValueNsfwProcessOptions(OutputImageOptions outputImageOptions, FilterMode filterMode, double filterNumber) {
-        this.outputImageOptions = outputImageOptions;
+    public AutoValueNsfwProcessOptions(BaseOptions baseOptions, FilterMode filterMode, double filterNumber) {
+        this.baseOptions = baseOptions;
         this.filterMode = filterMode;
         this.filterNumber = filterNumber;
     }
 
     @Override
-    OutputImageOptions outputImageOptions() {
-        return this.outputImageOptions;
+    BaseOptions baseOptions() {
+        return this.baseOptions;
     }
 
     @Override
@@ -30,7 +30,7 @@ final class AutoValueNsfwProcessOptions extends NsfwProcess.NsfwProcessOptions {
     }
 
     static final class Builder extends NsfwProcess.NsfwProcessOptions.Builder {
-        private OutputImageOptions outputImageOptions;
+        private BaseOptions baseOptions;
         private FilterMode filterMode;
         private double filterNumber;
 
@@ -38,8 +38,8 @@ final class AutoValueNsfwProcessOptions extends NsfwProcess.NsfwProcessOptions {
         }
 
         @Override
-        public NsfwProcess.NsfwProcessOptions.Builder setOutputImageOptions(OutputImageOptions options) {
-            this.outputImageOptions = options;
+        public NsfwProcess.NsfwProcessOptions.Builder setBaseOptions(BaseOptions options) {
+            this.baseOptions = options;
             return this;
         }
 
@@ -53,7 +53,7 @@ final class AutoValueNsfwProcessOptions extends NsfwProcess.NsfwProcessOptions {
         @Override
         NsfwProcess.NsfwProcessOptions autoBuild() {
             return new AutoValueNsfwProcessOptions(
-                    this.outputImageOptions,
+                    this.baseOptions,
                     this.filterMode,
                     this.filterNumber
             );
