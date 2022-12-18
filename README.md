@@ -2,12 +2,14 @@
 
 # ML Task Vision!
 
-This library help you solve common computer vision tasks by using On-device 
-machine
-learning. Such as blur nsfw images, censor faces, etc...
+**This library helps you solve common computer vision tasks by using On-device machine learning. Such
+as blur NSFW images, censor faces, etc...**
+
 #### Benefit
-+ Privacy (You don't need to send sensitive user's data to server to process)
-+ Faster (Because we don't need to request the server and wait the response)
+
++ Privacy (We don't need to send sensitive user data to the server to process)
++ Low latency (Because we don't need to request the server and wait for the response)
++ Offline availability (We can use any feature without an internet connection)
 
 ## How to use
 
@@ -17,7 +19,7 @@ Add it in your *settings.gradle*:
 dependencyResolutionManagement {  
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)  
     repositories {  
-	...  
+   ...  
     maven { url 'https://jitpack.io' }  
  }}
  ```
@@ -26,7 +28,7 @@ Add the dependency:
 
 ```
 dependencies {
-    implementation 'com.github.duy-maimanh:ml_task_vision:0.0.1'
+    implementation 'com.github.duy-maimanh:ml_task_vision:0.0.2'
 }
  ```
 
@@ -39,18 +41,17 @@ val options = BaseOptions.builder()
     .build()
  ```
 
-The *setNumberThreads* is the settings for CPU that mean it only work when 
-the *isUseGPU = false*. But you should set it because some devices not support GPU so
-they will use CPU instead.
+The *setNumberThreads* is the settings for CPU which mean it only works when the *isUseGPU = false*.
+But you should set it because some devices do not support GPU so they will use CPU instead.
 
-# NSFW detection
+# 1. NSFW detection
 
 ![NSFW Banner](_arts/nsfw_banner.png "nsfw banner")
 
-This is very first library's feature. That help us to detect the image and know
-if it is nsfw or safe for work. It is useful for kind of apps like social media,
-chatting, or dating... The accuracy now is around 88% base on 8100 test images. 
-And I am continue collecting dataset and training this model and will be update when I got higher accuracy.
+This is the very first library feature. That helps us to detect the image and know if it is NSFW or
+safe for work. It is useful for kind of apps like social media, chatting, or dating... The accuracy
+now is around 88% based on 8100 test images. And I continue collecting datasets and training this
+model and will be updated when I got higher accuracy.
 
 ## Download model
 
@@ -58,12 +59,14 @@ There are two ways to download models.
 
 ### 1. Download manually.
 
-Download [the model]() and [the label](). And copy these files to *asset*
+Download [the model](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_classifier.tflite)
+and [the label](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_labels.txt)
+. And copy these files to *src/main/asset*
 folder.
 
 ### 2. Create *Gradle task* to auto download.
 
-Open project level build.gradle. Add *de.undercouch:gradle-download-task:4.1.2*
+Open project-level build.gradle. Add *de.undercouch:gradle-download-task:4.1.2*
 
 ```
 buildscript {
@@ -74,16 +77,16 @@ buildscript {
 }
 ```
 
-Create *download_model.gradle* at *app* folder. And copy code bellow.
+Create *download_model.gradle* at *app* folder. And copy the code below.
 
 ```
 task downloadNSFWModel(type: Download) {
-    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_classifier.tflite'
+    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_classifier.tflite'
     dest project.ext.ASSET_DIR + '/nsfw_classifier.tflite'
     overwrite false
 }
 task downloadNSFWLabel(type: Download) {
-    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_labels.txt'
+    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_labels.txt'
     dest project.ext.ASSET_DIR + '/nsfw_labels.txt'
     overwrite false
 }
@@ -91,13 +94,13 @@ task downloadNSFWLabel(type: Download) {
 preBuild.dependsOn downloadNSFWModel, downloadNSFWLabel
 ```
 
-Move to app level build.gradle. Apply plugin and download task.
+Move to app-level build.gradle. Apply the plugin and the download task.
 
 ```
 apply plugin: 'de.undercouch.download'
 
 android {
-	...
+   ...
 }
 
 // import DownloadModels task
@@ -106,7 +109,7 @@ project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
 apply from:'download_model.gradle'
 
 dependencies {
-	...
+   ...
 }
 ```
 
@@ -137,17 +140,18 @@ or
 val result = nsfwProcess.detect(bitmap)
 ```
 
-The result contains the confidence of each label (safe and unsafe) and the
-filtered image.
+The result contains the confidence of each label (safe and unsafe) and the filtered image.
 
 ## NSFW Detection Benchmark
 
-Run benchmark with image 583*640 and loop for 50 times and get the average 
-of running time:
+Run benchmark with image 583*640 and loop for 50 times and get the average running time:
 
 |                    | Samsung S10 5G (Exynos 9820) | Realme Q5 Pro (snap 870) |
 |--------------------|------------------------------|--------------------------|
 | GPU                | 40ms                         | ms                       |
-| CPU with 4 threads | 253ms                        | ms                       |
+| CPU with 4 threads | ms                        | ms                       |
 
-# Face censor (Coming soon)
+# 2. Face censor
+(Coming soon)
+# 3. Background segmentation
+(Coming soon)
