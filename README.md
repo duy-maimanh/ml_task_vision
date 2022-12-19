@@ -25,7 +25,7 @@ dependencyResolutionManagement {
  }}
  ```
 
-Add the dependency:
+Add the dependency to app-level *build.gradle*:
 
 ```
 dependencies {
@@ -100,7 +100,10 @@ preBuild.dependsOn downloadNSFWModel, downloadNSFWLabel
 Move to app-level build.gradle. Apply the plugin and the download task.
 
 ```
-apply plugin: 'de.undercouch.download'
+plugins {
+    ...
+    id 'de.undercouch.download'
+}
 
 android {
    ...
