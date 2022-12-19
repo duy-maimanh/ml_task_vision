@@ -29,7 +29,7 @@ Add the dependency:
 
 ```
 dependencies {
-    implementation 'com.github.duy-maimanh:ml_task_vision:0.0.1'
+    implementation 'com.github.duy-maimanh:ml_task_vision:0.0.2'
 }
  ```
 
@@ -62,8 +62,8 @@ There are two ways to download models.
 
 ### 1. Download manually.
 
-Download [the model](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_classifier.tflite)
-and [the label](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_labels.txt)
+Download [the model](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_classifier.tflite)
+and [the label](https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_labels.txt)
 . And copy these files to *src/main/asset*
 folder.
 
@@ -84,12 +84,12 @@ Create *download_model.gradle* at *app* folder. And copy the code below.
 
 ```
 task downloadNSFWModel(type: Download) {
-    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_classifier.tflite'
+    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_classifier.tflite'
     dest project.ext.ASSET_DIR + '/nsfw_classifier.tflite'
     overwrite false
 }
 task downloadNSFWLabel(type: Download) {
-    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.1/nsfw_labels.txt'
+    src 'https://github.com/duy-maimanh/ml_task_vision/releases/download/0.0.2/nsfw_labels.txt'
     dest project.ext.ASSET_DIR + '/nsfw_labels.txt'
     overwrite false
 }
